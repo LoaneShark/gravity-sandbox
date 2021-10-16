@@ -1,39 +1,73 @@
-# PYTHON IMPORTS
+# SYS IMPORTS
 import sys, os, time
 import re
-# DEPENDENCY IMPORTS
+# PACKAGE IMPORTS
 import numpy as np 
-import scipy as sp 
-import matplotlib.pyplot as plt
+import scipy as sp
 #from mrtparse import *
+# LOCAL IMPORTS
+from src.tools import *
+
 
 def main():
 	massmodels = import_massmodel_data()
 	metadata, refs = import_galaxy_sample_data()
 	mm_dict = {mm['ID']: massmodels[massmodels['ID'] == mm['ID']] for mm in massmodels}
 
+	print(True)
+
+def debug(gal_ID):
+	massmodels = import_massmodel_data()
+	metadata, refs = import_galaxy_sample_data()
+	mm_dict = {mm['ID']: massmodels[massmodels['ID'] == mm['ID']] for mm in massmodels}
+
 	# sample data
-	print(mm_dict['UGCA442'])
-	print(metadata['UGCA442'])
-	print(refs[metadata['UGCA442']['Ref']])
+	print(mm_dict[gal_ID])
+	print(metadata[gal_ID])
+	print(refs[metadata[gal_ID]['Ref']])
 
 	# sample plot
-	plot_single_galaxy(massmodels,'UGCA442')
+	plot_single_galaxy(massmodels,gal_ID)
 
-# plots a galaxy given filtered MassModel data
-def plot_single_galaxy(mm_data, gal_id):
-	gal_data = mm_data[mm_data['ID'] == gal_id]
-	x = gal_data['R']
-	y = gal_data['Vobs']
-	y_err = gal_data['e_Vobs']
+# imports the MassModel data from the locally saved copy of the SPARC dataset
+# optimized for (Lelli et al, 2016)
+def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', num_header_rows=25, num_rows=3391):
+	mm_dt = np.dtype([('ID',		    'U255'),	#	    ID 	: Galaxy Identifier
+					  ('D',			np.float64),	#	     D	: Assumed distance 					(Mpc)
+					  ('R',			np.float64),	#	     R	: Galactocentric radius 			(kpc)
+					  ('Vobs',		np.float64),	#	  Vobs	: Observed circular velocity 		(km/s)
+					  ('e_Vobs',	np.float64),	#	e_Vobs	: Error in Vobs 					(km/s)
+					  ('Vgas',		np.float64),	#	  Vgas	: Gas velocity contribution 		(km/s)
+					  ('Vdisk',		np.float64),	#	 Vdisk	: Disk velocity contribution 		(km/s)
+					  ('Vbul',		np.float64),	#	  Vbul	: Bulge velocity contribution 		(km/s)
+					  ('SBdisk',	np.float64),	#	SBdisk	: Disk surface brightness 			(solLum/pc2)
+					  ('SBbul',		np.float64)])	#	 SBbul	: Bulge surface brightness 			(solLum/pc2)
 
-	plt.errorbar(x,y,yerr=y_err,xerr=None,fmt='b.')
-	plt.title(gal_id)
-	plt.xlabel('Radius (kpc)')
-	plt.ylabel('V_obs (km/s)')
-	plt.show()
+	mm_data = np.empty((num_rows,), dtype=mm_dt)
+	i = 0
+	h_len = num_header_rows	# number of header lines to skip in the file
+	for line in open(filepath):
+		# ignore first few lines of header and file description
+		if i >= h_len:
+			line_data = re.split('\\s+',line)[:10]
 
-def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', skip_header=41):
+			mm_data[i-h_len]['ID'] 		= line_data[0]
+			mm_data[i-h_len]['D'] 		= line_data[1]
+			mm_data[i-h_len]['R'] 		= line_data[2]
+			mm_data[i-h_len]['Vobs'] 	= line_data[3]
+			mm_data[i-h_len]['e_Vobs'] 	= line_data[4]
+			mm_data[i-h_len]['Vgas'] 	= line_data[5]
+			mm_data[i-h_len]['Vdisk'] 	= line_data[6]
+			mm_data[i-h_len]['Vbul'] 	= line_data[7]
+			mm_data[i-h_len]['SBdisk'] 	= line_data[8]
+			mm_data[i-h_len]['SBbul'] 	= line_data[9]
+		i += 1
+
+	return mm_data
+
+# imports the galaxy sample data
+# optimized for SPARC (Lelli et al, 2016c)
+def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_header_rows=41, data_start_row=98):
 	citations = {}
 	sample_data = {}
 	meta_dt = np.dtype([('ID',			'U255'),		#	    ID 	: Galaxy Identifier
@@ -63,13 +97,13 @@ def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', skip_hea
 	i = 0
 	for line in open(filepath):
 		# begin citation reference data
-		if i >= 41 and i <= 96:
-				ref, citation = line.split(' = ')
-				ref = ref.split(' ')[1]
-				citation = citation.split('\n')[0]
-				citations[ref] = citation
+		if i >= num_header_rows and i <= (data_start_row-2):
+			ref, citation = line.split(' = ')
+			ref = ref.split(' ')[1]
+			citation = citation.split('\n')[0]
+			citations[ref] = citation
 		# begin galaxy sample data
-		if i >= 98:
+		if i >= data_start_row:
 			line_data = re.split('\\s+',line)
 			# ignore leading/trailing whitespace
 			if line_data[0] == '':
@@ -87,40 +121,8 @@ def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', skip_hea
 
 	return sample_data,citations
 
-# imports the MassModel data from the locally saved copy of the SPARC dataset
-def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', skip_header=25, num_rows=3391):
-	mm_dt = np.dtype([('ID',		    'U255'),	#	    ID 	: Galaxy Identifier
-					  ('D',			np.float64),	#	     D	: Assumed distance 					(Mpc)
-					  ('R',			np.float64),	#	     R	: Galactocentric radius 			(kpc)
-					  ('Vobs',		np.float64),	#	  Vobs	: Observed circular velocity 		(km/s)
-					  ('e_Vobs',	np.float64),	#	e_Vobs	: Error in Vobs 					(km/s)
-					  ('Vgas',		np.float64),	#	  Vgas	: Gas velocity contribution 		(km/s)
-					  ('Vdisk',		np.float64),	#	 Vdisk	: Disk velocity contribution 		(km/s)
-					  ('Vbul',		np.float64),	#	  Vbul	: Bulge velocity contribution 		(km/s)
-					  ('SBdisk',	np.float64),	#	SBdisk	: Disk surface brightness 			(solLum/pc2)
-					  ('SBbul',		np.float64)])	#	 SBbul	: Bulge surface brightness 			(solLum/pc2)
-
-	mm_data = np.empty((num_rows,), dtype=mm_dt)
-	i = 0
-	h_len = skip_header	# number of header lines to skip in the file
-	for line in open(filepath):
-		# ignore first few lines of header and file description
-		if i >= h_len:
-			line_data = re.split('\\s+',line)[:10]
-
-			mm_data[i-h_len]['ID'] 		= line_data[0]
-			mm_data[i-h_len]['D'] 		= line_data[1]
-			mm_data[i-h_len]['R'] 		= line_data[2]
-			mm_data[i-h_len]['Vobs'] 	= line_data[3]
-			mm_data[i-h_len]['e_Vobs'] 	= line_data[4]
-			mm_data[i-h_len]['Vgas'] 	= line_data[5]
-			mm_data[i-h_len]['Vdisk'] 	= line_data[6]
-			mm_data[i-h_len]['Vbul'] 	= line_data[7]
-			mm_data[i-h_len]['SBdisk'] 	= line_data[8]
-			mm_data[i-h_len]['SBbul'] 	= line_data[9]
-		i += 1
-
-	return mm_data
-
 if __name__ == '__main__':
 	main()
+
+if __name__ == '__debug__':
+	debug('UGCA442')
