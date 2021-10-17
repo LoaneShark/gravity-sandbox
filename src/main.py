@@ -8,6 +8,9 @@ import scipy as sp
 # LOCAL IMPORTS
 from src.tools import *
 
+hubble_types = {0: 'S0', 1: 'Sa', 2: 'Sab', 3: 'Sb', 4: 'Sbc', 5: 'Sc', 6: 'Scd', 7: 'Sd', 8: 'Sdm', 9: 'Sm', 10: 'Im', 11: 'BCD'}
+dist_methods = {1: 'Hubble-Flow', 2: 'RGB Tip Magnitude', 3: 'Cepheid Magnitude-Period Relation', 4: 'Ursa Major Cluster', 5: 'SN Light Curve'}
+quality_flag = {1: 'High', 2: 'Medium', 3: 'Low'}
 
 def main():
 	massmodels = import_massmodel_data()
@@ -29,7 +32,7 @@ def debug(gal_ID):
 	# sample plot
 	plot_single_galaxy(massmodels,gal_ID)
 
-# imports the MassModel data from the locally saved copy of the SPARC dataset
+# imports the Newtonian Mass Model data from the locally saved copy of the SPARC dataset
 # optimized for (Lelli et al, 2016)
 def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', num_header_rows=25, num_rows=3391):
 	mm_dt = np.dtype([('ID',		    'U255'),	#	    ID 	: Galaxy Identifier
@@ -40,10 +43,10 @@ def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', num_hea
 					  ('Vgas',		np.float64),	#	  Vgas	: Gas velocity contribution 		(km/s)
 					  ('Vdisk',		np.float64),	#	 Vdisk	: Disk velocity contribution 		(km/s)
 					  ('Vbul',		np.float64),	#	  Vbul	: Bulge velocity contribution 		(km/s)
-					  ('SBdisk',	np.float64),	#	SBdisk	: Disk surface brightness 			(solLum/pc2)
-					  ('SBbul',		np.float64)])	#	 SBbul	: Bulge surface brightness 			(solLum/pc2)
-
+					  ('SBdisk',	np.float64),	#	SBdisk	: Disk surface brightness 			(solLum/pc^2)
+					  ('SBbul',		np.float64)])	#	 SBbul	: Bulge surface brightness 			(solLum/pc^2)
 	mm_data = np.empty((num_rows,), dtype=mm_dt)
+
 	i = 0
 	h_len = num_header_rows	# number of header lines to skip in the file
 	for line in open(filepath):
@@ -65,7 +68,7 @@ def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', num_hea
 
 	return mm_data
 
-# imports the galaxy sample data
+# imports the galaxy sample data, providing attributes and classifications for each sample
 # optimized for SPARC (Lelli et al, 2016c)
 def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_header_rows=41, data_start_row=98):
 	citations = {}
@@ -89,10 +92,6 @@ def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_head
 						('e_Vflat',		np.float64),	#  e_Vflat	: Mean error in Vflat 				(km/s)
 						('Q',			np.int32),		#	     Q	: Quality flag 						quality_flag[T]
 						('Ref',			'U255')])		#	   Ref	: Reference citation				citations[Ref]
-
-	hubble_types = {0: 'S0', 1: 'Sa', 2: 'Sab', 3: 'Sb', 4: 'Sbc', 5: 'Sc', 6: 'Scd', 7: 'Sd', 8: 'Sdm', 9: 'Sm', 10: 'Im', 11: 'BCD'}
-	dist_methods = {1: 'Hubble-Flow', 2: 'RGB Tip Magnitude', 3: 'Cepheid Magnitude-Period Relation', 4: 'Ursa Major Cluster', 5: 'SN Light Curve'}
-	quality_flag = {1: 'High', 2: 'Medium', 3: 'Low'}
 
 	i = 0
 	for line in open(filepath):
