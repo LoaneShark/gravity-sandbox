@@ -30,7 +30,7 @@ def debug(gal_ID):
 	print(refs[metadata[gal_ID]['Ref']])
 
 	# sample plot
-	plot_single_galaxy(massmodels,gal_ID)
+	plot_single_galaxy_mm(massmodels,gal_ID)
 
 # imports the Newtonian Mass Model data from the locally saved copy of the SPARC dataset
 # optimized for (Lelli et al, 2016)
