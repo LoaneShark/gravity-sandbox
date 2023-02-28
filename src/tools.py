@@ -5,9 +5,21 @@ import re
 import numpy as np 
 import scipy as sp 
 import matplotlib.pyplot as plt
+import arxiv
 
-def analysis():
-	print('Hello Analysis!')
+# hubble_types = {0: 'S0', 1: 'Sa', 2: 'Sab', 3: 'Sb', 4: 'Sbc', 5: 'Sc', 6: 'Scd', 7: 'Sd', 8: 'Sdm', 9: 'Sm', 10: 'Im', 11: 'BCD'}
+
+def plot_btfr_data(btfr_data, sample_data, include_irregulars=False):
+	sp_types = [1, 2, 3, 4, 5, 6, 7]
+	if include_irregulars:
+		sp_types += [9, 10, 11]
+	spirals = np.array([[btfr_data[gal_id]['log_Mb'],btfr_data[gal_id]['Vf'],btfr_data[gal_id]['e_log_Mb'],btfr_data[gal_id]['e_Vf']] for gal_id in btfr_data if sample_data[gal_id]['T'] in sp_types])
+	lentics = np.array([[btfr_data[gal_id]['log_Mb'],btfr_data[gal_id]['Vf'],btfr_data[gal_id]['e_log_Mb'],btfr_data[gal_id]['e_Vf']] for gal_id in btfr_data if sample_data[gal_id]['T'] == 0])
+
+	plt.scatter(spirals[:,1],spirals[:,2],color='k', alpha=0.1)
+	plt.scatter(lentics[:,1],lentics[:,2],color='b', alpha=0.5)
+	plt.xlabel('log(M_b)  (solMass)')
+	plt.ylabel('Flat Rotation Velocity (km/s)')
 
 # plots a galaxy given filtered MassModel data
 # - mm_data : numpy array of imported mass model data
@@ -107,3 +119,43 @@ def import_bulge_disk_decomps(datapath='../sparc/BulgeDiskDec_LTG/', gal_ID='UGC
 		i += 1
 
 	return bdd_data
+
+# Get the link to the arXiv pdf of the article (if possible)
+# (WIP, does not always succeed)
+def get_arxiv_link(citation):
+	ref_str = refs[metadata[gal_id]['Refs'][0]]
+	au_str, ref_str = ref_str.split('et al. ')
+	yr_str, jr_str, rn_str, pg_str = ref_str.split(', ')
+
+	q_str = ' '.join(['au:"'+au_str+'"', 'jr:'+jr_str, 'rn:'+rn_str, ])
+	print(q_str)
+
+	search_res = arxiv.Search(query=q_str, max_results=10, sort_by=arxiv.SortCriterion.Relevance, id_list=['10.1086/316883'])
+	for result in search_res.results():
+		print(result.title)
+		print(result.authors)
+		print(result.journal_ref)
+		print(result.links)
+		print('\n')
+	return False
+
+# Modified Universe Dynamics (MOUND)
+# from (Tonin, 2021)
+def mound():
+	# Universal Constants
+	G   = 6.674e-11     # G   : Newton's Gravitational Constant (m^3/(kg*s^2))
+	c   = 299792458     # c   : Speed of Light (m/s)
+	H_0 = 2.366e-18     # H_0 : Hubble Constant (s^-1)
+	H_o = 73            # H_o : Hubble Constant (km/s/Mpc)
+
+	# MOND Constants
+	a_0 = 1.1e-10       # a_0 : Milgrom's Constant (m/s^2)
+
+	# MOUND Constants
+	M_u = 1.5e53        # M_u : Mass of the observable universe (kg)
+	R_h = 4.55e17       # R_h : Hubble radius (m) = c / H_0
+	e_R_h = abs(R_h-(c/H_0))/R_h
+	g_u = 3.4365e-10    # g_u : "Universe Gravitational Acceleration" (m/s^2) = G * M_u / (R_h)^2
+	e_g_u = abs(g_u-(G*M_u)/(R_h**2))/g_u
+
+	return True

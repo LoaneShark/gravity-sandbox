@@ -7,6 +7,7 @@ import scipy as sp
 #from mrtparse import *
 # LOCAL IMPORTS
 from src.tools import *
+#import pytools
 
 hubble_types = {0: 'S0', 1: 'Sa', 2: 'Sab', 3: 'Sb', 4: 'Sbc', 5: 'Sc', 6: 'Scd', 7: 'Sd', 8: 'Sdm', 9: 'Sm', 10: 'Im', 11: 'BCD'}
 dist_methods = {1: 'Hubble-Flow', 2: 'RGB Tip Magnitude', 3: 'Cepheid Magnitude-Period Relation', 4: 'Ursa Major Cluster', 5: 'SN Light Curve'}
