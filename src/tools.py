@@ -9,6 +9,16 @@ import arxiv
 
 # hubble_types = {0: 'S0', 1: 'Sa', 2: 'Sab', 3: 'Sb', 4: 'Sbc', 5: 'Sc', 6: 'Scd', 7: 'Sd', 8: 'Sdm', 9: 'Sm', 10: 'Im', 11: 'BCD'}
 
+def get_single_galaxy_N(gal_ID, datapath='../sparc/sfb_LTG/', dataext='sfb'):
+	filepath = datapath + str(gal_ID) + '.' + dataext
+	n_data = 0; n_head = 0; str_ints = [str(n) for n in range(0,10)]
+	for line in open(filepath):
+		if str(line[0]) in str_ints:
+			n_data += 1
+		else:
+			n_head +=1
+	return n_data,n_head
+
 def plot_btfr_data(btfr_data, sample_data, include_irregulars=False):
 	sp_types = [1, 2, 3, 4, 5, 6, 7]
 	if include_irregulars:
@@ -67,22 +77,25 @@ def plot_single_galaxy_decomp(dec_data, gal_id):
 # optimized for (Lelli et al, 2016) and ID = UGCA442
 # - datapath : string containing the path to the photometric profile data directory
 # - gal_ID   : string containing the galaxy identifier
-# - num_header_rows : the number of rows containing header and comments to ignore. Typically 1 in this case.
 # - num_rows : the number of total rows that contain data in the document, including the header.
+# - num_header_rows : the number of rows containing header and comments to ignore. Typically 1.
+# - num_data_rows : the number of data rows that contain numerical data in the document. Does not include header or comments.
 # TODO: Verify data units and descriptions. Radius in particular seems to be in a different value than most.
-def import_photometric_profile(datapath='../sparc/sfb_LTG/', gal_ID='UGCA442', num_header_rows=1, num_rows=27):
+def import_photometric_profile(datapath='../sparc/sfb_LTG/', gal_ID='UGCA442'):
 	filepath = datapath + str(gal_ID) + '.sfb'
+	num_data_rows,num_header_rows = get_single_galaxy_N(gal_ID, datapath, dataext='sfb')
+	num_rows = num_data_rows + num_header_rows
 	pp_dt    = [('Radius',  		np.float64),	#	Radius	:  ???						
 				('mu',				np.float64),	#	mu	    :  Absolute Sky Value (?)			(mag/arcsec^2)			
 				('Kill',			bool),      	#	Kill	:  ???								bool
 				('Error',			np.float64)]	#	Error	:  Error in mu (?)					(mag/arcsec^2)
-	pp_data  = np.empty((num_rows-num_header_rows,),dtype=pp_dt)
+	pp_data  = np.empty((num_data_rows,),dtype=pp_dt)
 
 	i = 0
 	h_len = num_header_rows	# number of header lines to skip in the file
 	for line in open(filepath):
 		# ignore first line(s) as header
-		if i >= num_header_rows and i <= num_rows-1:
+		if i >= num_header_rows and i <= num_rows:
 			line_data = line.split()
 
 			pp_data[i-h_len]['Radius']	= line_data[0]
@@ -97,20 +110,23 @@ def import_photometric_profile(datapath='../sparc/sfb_LTG/', gal_ID='UGCA442', n
 # optimized for (Lelli et al, 2016) and ID = UGCA442
 # - datapath : string containing the path to the photometric profile data directory
 # - gal_ID   : string containing the galaxy identifier
-# - num_header_rows : the number of rows containing header and comments to ignore. Typically 1 in this case.
 # - num_rows : the number of total rows that contain data in the document, including the header.
-def import_bulge_disk_decomps(datapath='../sparc/BulgeDiskDec_LTG/', gal_ID='UGCA442', num_header_rows=1, num_rows=27):
+# - num_header_rows : the number of rows containing header and comments to ignore. Typically 1.
+# - num_data_rows : the number of data rows that contain numerical data in the document. Does not include header or comments.
+def import_bulge_disk_decomps(datapath='../sparc/BulgeDiskDec_LTG/', gal_ID='UGCA442'):
 	filepath = datapath + str(gal_ID) + '.dens'
+	num_data_rows,num_header_rows = get_single_galaxy_N(gal_ID, datapath, dataext='dens')
+	num_rows = num_data_rows + num_header_rows
 	bdd_dt   = [('Radius',  		np.float64),	#	Radius	: Measurement(?) radius 			(kpc)
 				('SBdisk',			np.float64),	#	SBdisk	: Disk surface brightness 			(solLum/pc^2)
 				('SBbulge',			np.float64)]    #	SBbulge	: Bulge surface brightness			(solLum/pc^2)
-	bdd_data = np.empty((num_rows-num_header_rows,),dtype=bdd_dt)
+	bdd_data = np.empty((num_data_rows,),dtype=bdd_dt)
 
 	i = 0
 	h_len = num_header_rows	# number of header lines to skip in the file
 	for line in open(filepath):
 		# ignore first line(s) as header
-		if i >= num_header_rows and i <= num_rows-1:
+		if i >= num_header_rows and i <= num_rows:
 			line_data = line.split()
 
 			bdd_data[i-h_len]['Radius']	 = line_data[0]
