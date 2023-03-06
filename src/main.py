@@ -71,7 +71,7 @@ def import_massmodel_data(filepath='../sparc/MassModels_Lelli2016c.mrt', num_hea
 
 # imports the galaxy sample data, providing attributes and classifications for each sample
 # optimized for SPARC (Lelli et al, 2016c)
-def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_header_rows=41, data_start_row=98):
+def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', include_low_q=False,num_header_rows=41, data_start_row=98):
 	citations = {}
 	sample_data = {}
 	num_features = 19
@@ -93,8 +93,7 @@ def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_head
 					  (  'Vflat',		np.float64),	#	 Vflat	: Asymptotic flat rotation vel.		(km/s)
 					  ('e_Vflat',		np.float64),	#  e_Vflat	: Mean error in Vflat 				(km/s)
 					  (  'Q',			np.int32),		#	     Q	: Quality flag 						quality_flag[T]
-					  (  'Refs',		list)])			#	   Refs	: Reference citation(s)				
-					  #('Ref',			'U255')])		#	   Ref	: Reference citation(s)				citations[Ref]
+					  (  'Refs',		list)])			#	   Refs	: Reference citation(s)				citations[Ref]
 
 	i = 0
 	for line in open(filepath):
@@ -118,8 +117,11 @@ def import_galaxy_sample_data(filepath='../sparc/SPARC_Lelli2016c.mrt', num_head
 
 			# create a numpy array with labeled and type-checked fields
 			line_arr = np.array([tuple(line_data[1:])], dtype=meta_dt)
-			# hash under galaxy ID
-			sample_data[line_data[0]] = line_arr[0]
+
+			# filter out low quality samples
+			if line_arr['Q'] < 3 or include_low_q:
+				# hash under galaxy ID
+				sample_data[line_data[0]] = line_arr[0]
 		i += 1
 
 	return sample_data,citations
