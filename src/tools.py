@@ -19,59 +19,76 @@ def get_single_galaxy_N(gal_ID, datapath='../sparc/sfb_LTG/', dataext='sfb'):
 			n_head +=1
 	return n_data,n_head
 
-def plot_btfr_data(btfr_data, sample_data, include_irregulars=False):
+def plot_btfr_data(btfr_data, sample_data, include_irregulars=False, silent=False):
 	sp_types = [1, 2, 3, 4, 5, 6, 7]
 	if include_irregulars:
 		sp_types += [9, 10, 11]
 	spirals = np.array([[btfr_data[gal_id]['log_Mb'],btfr_data[gal_id]['Vf'],btfr_data[gal_id]['e_log_Mb'],btfr_data[gal_id]['e_Vf']] for gal_id in btfr_data if sample_data[gal_id]['T'] in sp_types])
 	lentics = np.array([[btfr_data[gal_id]['log_Mb'],btfr_data[gal_id]['Vf'],btfr_data[gal_id]['e_log_Mb'],btfr_data[gal_id]['e_Vf']] for gal_id in btfr_data if sample_data[gal_id]['T'] == 0])
+	fig, ax = plt.subplots()
 
-	plt.scatter(spirals[:,1],spirals[:,2],color='k', alpha=0.1)
-	plt.scatter(lentics[:,1],lentics[:,2],color='b', alpha=0.5)
-	plt.xlabel('log(M_b)  (solMass)')
-	plt.ylabel('Flat Rotation Velocity (km/s)')
+	ax.scatter(spirals[:,1],spirals[:,2],color='k', alpha=0.1)
+	ax.scatter(lentics[:,1],lentics[:,2],color='b', alpha=0.5)
+	ax.set_xlabel('log(M_b)  (solMass)')
+	ax.set_ylabel('Flat Rotation Velocity (km/s)')
+	if not(silent): 
+		plt.show()
+
+	return (fig,ax)
 
 # plots a galaxy given filtered MassModel data
 # - mm_data : numpy array of imported mass model data
 # - gal_id  : string containing the galaxy's identifier
-def plot_single_galaxy_mm(mm_data, gal_id):
+def plot_single_galaxy_mm(mm_data, gal_id, silent=False):
 	gal_data = mm_data[mm_data['ID'] == gal_id]
 	x = gal_data['R']
 	y = gal_data['Vobs']
 	y_err = gal_data['e_Vobs']
+	fig, ax = plt.subplots()
 
-	plt.errorbar(x,y,yerr=y_err,xerr=None,fmt='r.')
-	plt.title('Newtonian Mass Model ['+gal_id+']')
-	plt.xlabel('Radius (kpc)')
-	plt.ylabel('V_obs (km/s)')
-	plt.show()
+	ax.errorbar(x,y,yerr=y_err,xerr=None,fmt='r.')
+	ax.set_title('Newtonian Mass Model ['+gal_id+']')
+	ax.set_xlabel('Radius (kpc)')
+	ax.set_ylabel('V_obs (km/s)')
+	if not(silent): 
+		plt.show()
+
+	return (fig,ax)
 
 # plots a galaxy given its photometric profile
 # - photo_data : numpy array of imported photometric profile data
 # - gal_id     : string containing the galaxy's identifier
-def plot_single_galaxy_photo_profile(photo_data, gal_id):
+def plot_single_galaxy_photo_profile(photo_data, gal_id, silent=False):
 	x = photo_data['Radius']
 	y = photo_data['mu']
 	y_err = photo_data['Error']
+	fig, ax = plt.subplots()
 
-	plt.errorbar(x,y,yerr=y_err,xerr=None,fmt='g.')
-	plt.title('Photometric Profile ['+gal_id+']')
-	plt.xlabel('Radius (???)')
-	plt.ylabel('mu (mag/arcsec^2)')
-	plt.show()
+	ax.errorbar(x,y,yerr=y_err,xerr=None,fmt='g.')
+	ax.set_title('Photometric Profile ['+gal_id+']')
+	ax.set_xlabel('Radius (???)')
+	ax.set_ylabel('mu (mag/arcsec^2)')
+	if not(silent): 
+		plt.show()
+
+	return (fig,ax)
 
 # plots a galaxy given its bulge/disk decomposition
 # - dec_data : numpy array of imported decomposition data
 # - gal_id   : string containing the galaxy's identifier
-def plot_single_galaxy_decomp(dec_data, gal_id):
+def plot_single_galaxy_decomp(dec_data, gal_id, silent=False):
 	x = dec_data['Radius']
 	y = dec_data['SBdisk']
+	fig, ax = plt.subplots()
 
-	plt.plot(x,y,'b.')
-	plt.title('Bulge/Disk Decomposition ['+gal_id+']')
-	plt.xlabel('Radius (kpc)')
-	plt.ylabel('SBdisk (solLum/pc^2)')
-	plt.show()
+	ax.plot(x,y,'b.')
+	ax.set_title('Bulge/Disk Decomposition ['+gal_id+']')
+	ax.set_xlabel('Radius (kpc)')
+	ax.set_ylabel('SBdisk (solLum/pc^2)')
+	if not(silent): 
+		plt.show()
+
+	return (fig,ax)
 
 # imports the surface photometric profile data for a given galaxy identifer
 # optimized for (Lelli et al, 2016) and ID = UGCA442
@@ -136,6 +153,10 @@ def import_bulge_disk_decomps(datapath='../sparc/BulgeDiskDec_LTG/', gal_ID='UGC
 
 	return bdd_data
 
+# WIP 
+def plot_single_galaxy_rotation_curve(gal_ID, decomp_data, n_steps=100, classical=True, lcdm=False, mond=False, mound=False, best_fit=False):
+	return False # WIP
+
 # Get the link to the arXiv pdf of the article (if possible)
 # (WIP, does not always succeed)
 def get_arxiv_link(citation):
@@ -157,21 +178,36 @@ def get_arxiv_link(citation):
 
 # Modified Universe Dynamics (MOUND)
 # from (Tonin, 2021)
-def mound():
+def mound(val,hubble_const=73):
 	# Universal Constants
 	G   = 6.674e-11     # G   : Newton's Gravitational Constant (m^3/(kg*s^2))
 	c   = 299792458     # c   : Speed of Light (m/s)
 	H_0 = 2.366e-18     # H_0 : Hubble Constant (s^-1)
-	H_o = 73            # H_o : Hubble Constant (km/s/Mpc)
+	H_o = hubble_const  # H_o : Hubble Constant (km/s/Mpc)
 
 	# MOND Constants
 	a_0 = 1.1e-10       # a_0 : Milgrom's Constant (m/s^2)
 
 	# MOUND Constants
-	M_u = 1.5e53        # M_u : Mass of the observable universe (kg)
-	R_h = 4.55e17       # R_h : Hubble radius (m) = c / H_0
-	e_R_h = abs(R_h-(c/H_0))/R_h
-	g_u = 3.4365e-10    # g_u : "Universe Gravitational Acceleration" (m/s^2) = G * M_u / (R_h)^2
-	e_g_u = abs(g_u-(G*M_u)/(R_h**2))/g_u
+	M_u   	= 1.5e53        # M_u : Mass of the observable universe (kg)
+	R_h   	= 4.55e17       # R_h : Hubble radius (m) = c / H_0
+	e_R_h 	= abs(R_h-(c/H_0))/R_h
+	g_u   	= 3.4365e-10    # g_u : "Universe Gravitational Acceleration" (m/s^2) = G * M_u / (R_h)^2
+	e_g_u 	= abs(g_u-(G*M_u)/(R_h**2))/g_u
 
-	return True
+	mound_vals = {
+		"G"    	: G,
+		"c"    	: c,
+		"H_0"  	: H_0,
+		"H_o"  	: H_o,
+		"a_0"  	: a_0,
+		"M_u"  	: M_u,
+		"R_h"  	: R_h,
+		"e_R_h" : e_R_h,
+		"g_u"  	: g_u,
+		"e_g_u" : e_g_u
+	}
+	if val in mound_vals:
+		return mound_vals[val]
+	else:
+		return False
