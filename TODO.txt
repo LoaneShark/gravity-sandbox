@@ -1,0 +1,8 @@
+- Interpolate my own rotation curves from photometric distributions?
+    - Compare the above for Newtonian, Relativistic, MONDian, and MOUNDian dynamics
+    - Compare best-fit DM halos?
+- All photometric and velocity curve data is calculated with stellar mass-to-light ratios \Upsilon_{star} = 1 M_sol/L_sol
+    - Is this a good assumption? Does other data support this, or would there be a better way to approximate mass distributions?
+    - Add a way to vary this as a hyperparameter
+        - Further allow variation over bulge/disk ratios individually?
+            - This would only make sense if we have some reason to believe that average stellar mass is radially dependant (and this doesn't come from photometric data somehow), and therefore mass-to-luminosity ratios would be different in the disk vs bulge (or even to a higher degree of granularity)
