@@ -46,7 +46,7 @@ def plot_single_galaxy_mm(mm_data, gal_id, silent=False):
 	y_err = gal_data['e_Vobs']
 	fig, ax = plt.subplots()
 
-	ax.errorbar(x,y,yerr=y_err,xerr=None,fmt='r.')
+	ax.errorbar(x,y,yerr=y_err,xerr=None,fmt='k.')
 	ax.set_title('Newtonian Mass Model ['+gal_id+']')
 	ax.set_xlabel('Radius (kpc)')
 	ax.set_ylabel('V_obs (km/s)')

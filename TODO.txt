@@ -6,3 +6,7 @@
     - Add a way to vary this as a hyperparameter
         - Further allow variation over bulge/disk ratios individually?
             - This would only make sense if we have some reason to believe that average stellar mass is radially dependant (and this doesn't come from photometric data somehow), and therefore mass-to-luminosity ratios would be different in the disk vs bulge (or even to a higher degree of granularity)
+- Individual to galaxy parameters?
+    - gas fraction? -> for irregulars especially
+    - Gas distribution within galaxies is non-trivial and requires outside data models.
+    - stellar mass-to-light ratios (for bulge and disk)?
