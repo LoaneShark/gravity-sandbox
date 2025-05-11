@@ -1,1 +1,1 @@
-data from http://astroweb.cwru.edu/SPARC/
+SPARC data from http://astroweb.cwru.edu/SPARC/
